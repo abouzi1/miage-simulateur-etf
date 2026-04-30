@@ -4,6 +4,7 @@ Point d'entrée principal de l'API FastAPI - Projet DATA M2 MIAGE
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import simulation
+from router_regression import router as regression_router  # P3 - Module C
 
 # 1. Création de l'instance FastAPI
 app = FastAPI(
@@ -30,7 +31,7 @@ app.add_middleware(
 app.include_router(simulation.router)
 # Quand tes coéquipiers auront leurs modules :
 # app.include_router(etf.router)
-# app.include_router(regression.router)
+app.include_router(regression_router)  # P3 - Module C
 
 
 # 4. Route de santé (utile pour vérifier que l'API tourne)
