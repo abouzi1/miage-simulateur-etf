@@ -1,0 +1,71 @@
+.dca-chart-container {
+  background: var(--blanc);
+  border: 1px solid var(--gris-bordure);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.dca-chart-container h3 {
+  margin: 0 0 0.25rem 0;
+  color: var(--bleu-fonce);
+  font-size: 1.125rem;
+}
+
+.chart-subtitle {
+  margin: 0 0 1.5rem 0;
+  color: var(--gris-secondaire);
+  font-size: 0.875rem;
+}
+
+.custom-tooltip {
+  background: var(--blanc);
+  border: 1px solid var(--gris-bordure);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.tooltip-date {
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+  color: var(--bleu-fonce);
+  border-bottom: 1px solid var(--gris-bordure);
+  padding-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.tooltip-entry {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+}
+
+.tooltip-name {
+  color: var(--gris-secondaire);
+  margin-right: 0.5rem;
+}
+
+.chart-legend-info {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--bleu-fond);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--gris-texte);
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
