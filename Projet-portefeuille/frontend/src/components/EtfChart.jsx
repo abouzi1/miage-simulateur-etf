@@ -49,32 +49,57 @@ function EtfChart({ etf1, etf2 }) {
         console.error("Erreur lors de la fusion de l'historique :", error);
         setLoading(false);
       });
-  }, [etf1, etf2]); // On relance ce code dès qu'un des deux ETF change
+  }, [etf1, etf2]);
 
   if (loading) return <p style={{ marginTop: '20px', textAlign: 'center' }}>⏳ Calcul et fusion des historiques en cours...</p>;
   if (data.length === 0) return null;
 
   return (
-    <div style={{ marginTop: '20px', height: '450px', width: '100%', maxWidth: '1000px', margin: '0 auto' }}>
-      <h3 style={{ textAlign: 'center' }}>Comparaison des prix de clôture</h3>
+    <div className="carte-commune" style={{ height: '450px', width: '100%', maxWidth: '1000px', margin: '20px auto' }}>
+      <h3 style={{ textAlign: 'center', marginBottom: '20px' }}>Comparaison des prix de clôture</h3>
       
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
           <XAxis dataKey="date" minTickGap={50} tick={{ fontSize: 12 }} />
-          <YAxis domain={['auto', 'auto']} tick={{ fontSize: 12 }} />
+          
+          {/* 1. L'axe de GAUCHE (Bleu) pour l'ETF 1 */}
+          <YAxis yAxisId="left" domain={['auto', 'auto']} tick={{ fontSize: 12, fill: '#2563eb' }} />
+          
+          {/* 2. L'axe de DROITE (Orange) pour l'ETF 2 (s'il existe) */}
+          {etf2 && (
+            <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} tick={{ fontSize: 12, fill: '#ea580c' }} />
+          )}
+
           <Tooltip />
-          {/* Legend permet d'afficher le nom de la courbe en bas du graphique */}
           <Legend verticalAlign="top" height={36} />
           
-          {/* Si ETF1 existe, on dessine sa ligne bleue. On utilise son Ticker comme clé dynamique */}
+          {/* Ligne ETF 1 */}
           {etf1 && (
-            <Line type="monotone" dataKey={etf1.ticker} name={etf1.nom} stroke="#2563eb" dot={false} strokeWidth={2} />
+            <Line 
+              yAxisId="left" /* <--- On rattache cette ligne à l'axe de gauche */
+              type="monotone" 
+              dataKey={etf1.ticker} 
+              name={etf1.nom} 
+              stroke="#2563eb" 
+              dot={false} 
+              strokeWidth={2} 
+              connectNulls={true} 
+            />
           )}
           
-          {/* Si ETF2 existe, on dessine sa ligne orange */}
+          {/* Ligne ETF 2 */}
           {etf2 && (
-            <Line type="monotone" dataKey={etf2.ticker} name={etf2.nom} stroke="#ea580c" dot={false} strokeWidth={2} />
+            <Line 
+              yAxisId="right" /* <--- On rattache cette ligne à l'axe de droite */
+              type="monotone" 
+              dataKey={etf2.ticker} 
+              name={etf2.nom} 
+              stroke="#ea580c" 
+              dot={false} 
+              strokeWidth={2} 
+              connectNulls={true} 
+            />
           )}
         </LineChart>
       </ResponsiveContainer>

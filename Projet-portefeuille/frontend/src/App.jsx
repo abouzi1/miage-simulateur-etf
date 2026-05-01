@@ -8,4 +8,4 @@ function App() {
   );
 }
 
-export default App;
+export default App; // <--- C'est cette ligne magique qui manquait à React !

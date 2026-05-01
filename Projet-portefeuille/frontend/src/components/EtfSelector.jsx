@@ -27,7 +27,9 @@ function EtfSelector() {
 
   return (
     <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      <h2>Explorateur d'ETF</h2>
+      <h2 style={{ textAlign: 'center', fontSize: '2.5rem', marginTop: '30px', marginBottom: '40px' }}>
+      Explorateur d'ETF
+      </h2>
       
       <div style={{ display: 'flex', gap: '40px', flexWrap: 'wrap', marginBottom: '30px' }}>
         
@@ -55,12 +57,24 @@ function EtfSelector() {
 
           {/* LE BOUTON COMPARER : Apparaît si on a un ETF1, et qu'on ne compare pas encore */}
           {selectedEtf1 && !isComparing && (
-            <button 
-              onClick={() => setIsComparing(true)}
-              style={{ marginTop: '15px', padding: '10px 15px', backgroundColor: '#ea580c', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', width: '100%' }}
-            >
-              + Comparer avec un autre ETF
-            </button>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '25px', marginBottom: '10px' }}>
+              <button 
+                onClick={() => setIsComparing(true)}
+                style={{ 
+                  padding: '12px 32px', 
+                  backgroundColor: '#ea580c', 
+                  color: 'white', 
+                  border: '2px solid #c2410c', // La belle bordure un peu plus foncée
+                  borderRadius: '30px', // Un bel arrondi
+                  cursor: 'pointer', 
+                  fontWeight: 'bold', 
+                  fontSize: '1rem',
+                  boxShadow: '0 4px 6px rgba(234, 88, 12, 0.25)', // Légère ombre pour donner du relief
+                }}
+              >
+                + Comparer avec un autre ETF
+              </button>
+            </div>
           )}
         </div>
 
