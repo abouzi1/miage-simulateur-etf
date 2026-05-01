@@ -4,7 +4,7 @@ Point d'entrée principal de l'API FastAPI - Projet DATA M2 MIAGE
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import simulation
-from router_regression import router as regression_router  # P3 - Module C
+from routers import router_regression # P3 - Module C
 
 # 1. Création de l'instance FastAPI
 app = FastAPI(
@@ -24,7 +24,7 @@ app.add_middleware(
 )
 # 3. Inclusion des routers
 app.include_router(simulation.router)
-app.include_router(regression_router)
+app.include_router(router_regression.router)  # P3 - Module C # P3 - Module C
 
 # 4. Route de santé
 @app.get("/", tags=["Health"])
