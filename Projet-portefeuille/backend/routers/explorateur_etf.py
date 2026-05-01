@@ -1,6 +1,5 @@
-
-import numpy as np
-from scipy import stats
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 import psycopg2
 import os
 from pathlib import Path
@@ -10,15 +9,13 @@ from dotenv import load_dotenv
 def get_db_connection():
     return psycopg2.connect(os.getenv("DATABASE_URL"))
 
-# Route de test (la racine)
-@app.get("/")
-def read_root():
-    return {"message": "Le serveur Backend est en ligne et prêt !"}
+
+router = APIRouter(prefix="/etfs", tags=["explorateur ETF"])
 
 # --- MODULE A : ROUTES API ---
 
 # Étape 2 : La route "Catalogue" pour récupérer la liste des ETF
-@app.get("/api/etfs")
+@router.get("/")
 def get_etfs():
     try:
         conn = get_db_connection()
@@ -55,7 +52,7 @@ from datetime import date # Ajoute cette ligne tout en haut du fichier avec les 
 # ... (ton code précédent) ...
 
 # Étape 3 : La route "Historique" pour récupérer les prix d'un ETF précis
-@app.get("/api/etfs/{etf_id}/historique")
+@router.get("/{etf_id}/historique")
 def get_etf_historique(etf_id: int):
     try:
         conn = get_db_connection()

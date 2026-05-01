@@ -16,8 +16,8 @@ function EtfChart({ etf1, etf2 }) {
     setLoading(true);
 
     // On prépare les deux appels à l'API. Si un ETF manque, on renvoie une liste vide pour ne rien bloquer.
-    const requete1 = etf1 ? axios.get(`http://127.0.0.1:8000/api/etfs/${etf1.id}/historique`) : Promise.resolve({ data: [] });
-    const requete2 = etf2 ? axios.get(`http://127.0.0.1:8000/api/etfs/${etf2.id}/historique`) : Promise.resolve({ data: [] });
+    const requete1 = etf1 ? axios.get(`http://127.0.0.1:8000/etfs/${etf1.id}/historique`) : Promise.resolve({ data: [] });
+    const requete2 = etf2 ? axios.get(`http://127.0.0.1:8000/etfs/${etf2.id}/historique`) : Promise.resolve({ data: [] });
 
     // On lance les deux requêtes en même temps avec Promise.all
     Promise.all([requete1, requete2])

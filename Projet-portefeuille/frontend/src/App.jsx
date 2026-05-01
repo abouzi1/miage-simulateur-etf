@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, NavLink, Navigate } from "react-router-dom";
 import SimulateurDCA from "./pages/SimulateurDCA";
 import ModuleC from "./pages/ModuleC";
+import EtfSelector from "./components/EtfSelector";
 import "./App.css";
 
 // ============================================================
@@ -24,7 +25,7 @@ function Home() {
             <NavLink to="/simulateur" className="btn-hero btn-hero-primary">
               Lancer une simulation →
             </NavLink>
-            <NavLink to="/etf" className="btn-hero btn-hero-secondary">
+            <NavLink to="/etfs" className="btn-hero btn-hero-secondary">
               Explorer les ETF
             </NavLink>
           </div>
@@ -48,7 +49,7 @@ function Home() {
             number="A"
             title="Explorateur d'ETF"
             description="Recherchez des ETF, consultez leurs caractéristiques (TER, indice, éligibilité PEA) et comparez leurs performances historiques."
-            link="/etf"
+            link="/etfs"
             cta="Explorer"
           />
           <ModuleCard
@@ -94,9 +95,6 @@ function Home() {
   );
 }
 
-<<<<<<< HEAD
-export default App; // <--- C'est cette ligne magique qui manquait à React !
-=======
 // ============================================================
 // CARTES
 // ============================================================
@@ -127,20 +125,6 @@ function InfoCard({ icon, title, text }) {
 }
 
 // ============================================================
-// PAGES PLACEHOLDER (en attendant les autres modules)
-// ============================================================
-function ExplorateurETF() {
-  return (
-    <div className="placeholder-page">
-      <span className="placeholder-icon">🔍</span>
-      <h1>Module A — Explorateur d'ETF</h1>
-      <p>Cette page sera développée par mon coéquipier.</p>
-      <p className="placeholder-meta">🚧 En cours de construction</p>
-    </div>
-  );
-}
-
-// ============================================================
 // NAVBAR
 // ============================================================
 function Navbar() {
@@ -155,7 +139,7 @@ function Navbar() {
         <NavLink to="/" end className="navbar-link">
           Accueil
         </NavLink>
-        <NavLink to="/etf" className="navbar-link">
+        <NavLink to="/etfs" className="navbar-link">
           ETF
         </NavLink>
         <NavLink to="/simulateur" className="navbar-link">
@@ -188,7 +172,7 @@ function Footer() {
 
         <div className="footer-section">
           <strong>Navigation</strong>
-          <NavLink to="/etf">Explorateur d'ETF</NavLink>
+          <NavLink to="/etfs">Explorateur d'ETF</NavLink>
           <NavLink to="/simulateur">Simulateur DCA</NavLink>
           <NavLink to="/regression">Régression</NavLink>
         </div>
@@ -219,7 +203,7 @@ function App() {
         <main className="app-main">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/etf" element={<ExplorateurETF />} />
+            <Route path="/etfs" element={<EtfSelector/>} />
             <Route path="/simulateur" element={<SimulateurDCA />} />
             <Route path="/regression" element={<ModuleC/>} />
             <Route path="*" element={<Navigate to="/" replace />} />
@@ -232,4 +216,3 @@ function App() {
 }
 
 export default App;
->>>>>>> dd8cdff8c8cb87c79b702a062c4fa9ac3f6cddeb

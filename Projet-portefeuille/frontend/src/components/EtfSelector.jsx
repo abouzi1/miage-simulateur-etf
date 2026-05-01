@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import EtfChart from './EtfChart';
+import './EtfSelector.css';
 
 function EtfSelector() {
   const [etfs, setEtfs] = useState([]);
   const [etf1Id, setEtf1Id] = useState("");
   const [etf2Id, setEtf2Id] = useState("");
-  
-  // NOUVEAU : Un interrupteur (state) pour savoir si on affiche la zone de comparaison
+
   const [isComparing, setIsComparing] = useState(false);
 
+  const [searchEtf1, setSearchEtf1] = useState("");
+  const [searchEtf2, setSearchEtf2] = useState("");
+
   useEffect(() => {
-    axios.get('http://127.0.0.1:8000/api/etfs')
+    axios.get('http://127.0.0.1:8000/etfs')
       .then(response => setEtfs(response.data))
       .catch(error => console.error("Erreur Backend :", error));
   }, []);
@@ -19,58 +22,79 @@ function EtfSelector() {
   const selectedEtf1 = etfs.find(etf => etf.id.toString() === etf1Id);
   const selectedEtf2 = etfs.find(etf => etf.id.toString() === etf2Id);
 
-  // Fonction pour refermer la comparaison proprement
+  const filteredEtfs1 = etfs.filter(etf => {
+    const nom = etf.nom || "";
+    const ticker = etf.ticker || "";
+    return `${nom} ${ticker}`.toLowerCase().includes(searchEtf1.toLowerCase());
+  });
+
+  const filteredEtfs2 = etfs.filter(etf => {
+    const nom = etf.nom || "";
+    const ticker = etf.ticker || "";
+    return `${nom} ${ticker}`.toLowerCase().includes(searchEtf2.toLowerCase());
+  });
+
   const annulerComparaison = () => {
-    setIsComparing(false); // On cache la colonne de droite
-    setEtf2Id(""); // On vide la mémoire du 2ème ETF pour que le graphique s'ajuste
+    setIsComparing(false);
+    setEtf2Id("");
+    setSearchEtf2("");
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      <h2 style={{ textAlign: 'center', fontSize: '2.5rem', marginTop: '30px', marginBottom: '40px' }}>
-      Explorateur d'ETF
+    <div className="etf-selector-page">
+      <h2 className="etf-title">
+        Explorateur d'ETF
       </h2>
-      
-      <div style={{ display: 'flex', gap: '40px', flexWrap: 'wrap', marginBottom: '30px' }}>
-        
-        {/* COLONNE GAUCHE : Toujours visible */}
-        <div style={{ flex: 1, minWidth: '300px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', color: isComparing ? '#2563eb' : '#333', fontWeight: 'bold' }}>
-            {isComparing ? "🔴 Actif n°1 (Courbe Bleue) :" : "Sélectionne un ETF :"}
+
+      <div className="etf-selector-container">
+
+        {/* COLONNE GAUCHE */}
+        <div className="etf-column">
+          <label className={`etf-label ${isComparing ? 'label-blue' : ''}`}>
+            {isComparing ? "🔵 Actif n°1 — Courbe bleue :" : "Sélectionne un ETF :"}
           </label>
-          <select 
-            style={{ padding: '8px', width: '100%', fontSize: '16px', borderColor: isComparing ? '#2563eb' : '#ccc' }}
-            value={etf1Id}
-            onChange={(e) => setEtf1Id(e.target.value)}
-          >
-            <option value="">-- Sélectionner --</option>
-            {etfs.map(etf => <option key={etf.id} value={etf.id}>{etf.nom} ({etf.ticker})</option>)}
-          </select>
+
+          <div className="etf-search-card blue-card">
+            <div className="search-wrapper">
+              <span className="search-icon">🔎</span>
+
+              <input
+                type="text"
+                className="etf-search-input"
+                placeholder="Rechercher un ETF par nom ou ticker..."
+                value={searchEtf1}
+                onChange={(e) => setSearchEtf1(e.target.value)}
+              />
+            </div>
+
+            <select
+              className="etf-select select-blue"
+              value={etf1Id}
+              onChange={(e) => setEtf1Id(e.target.value)}
+            >
+              <option value="">-- Sélectionner --</option>
+
+              {filteredEtfs1.map(etf => (
+                <option key={etf.id} value={etf.id}>
+                  {etf.nom} ({etf.ticker})
+                </option>
+              ))}
+            </select>
+          </div>
 
           {selectedEtf1 && (
-            <div style={{ marginTop: '15px', padding: '15px', borderLeft: isComparing ? '4px solid #2563eb' : '4px solid #333', backgroundColor: isComparing ? '#f0f4ff' : '#f9f9f9', borderRadius: '4px' }}>
-              <p style={{ margin: '5px 0' }}><strong>Frais :</strong> {(selectedEtf1.ter * 100).toFixed(2)} %</p>
-              <p style={{ margin: '5px 0' }}><strong>PEA :</strong> {selectedEtf1.eligible_pea ? "✅ Oui" : "❌ Non"}</p>
-              <p style={{ margin: '5px 0' }}><strong>Indice :</strong> {selectedEtf1.indice_replique}</p>
+            <div className={`etf-info-box ${isComparing ? 'info-blue' : 'info-neutral'}`}>
+              <p><strong>Frais :</strong> {(selectedEtf1.ter * 100).toFixed(2)} %</p>
+              <p><strong>PEA :</strong> {selectedEtf1.eligible_pea ? "✅ Oui" : "❌ Non"}</p>
+              <p><strong>Indice :</strong> {selectedEtf1.indice_replique}</p>
             </div>
           )}
 
-          {/* LE BOUTON COMPARER : Apparaît si on a un ETF1, et qu'on ne compare pas encore */}
           {selectedEtf1 && !isComparing && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '25px', marginBottom: '10px' }}>
-              <button 
+            <div className="compare-button-wrapper">
+              <button
+                className="compare-button"
                 onClick={() => setIsComparing(true)}
-                style={{ 
-                  padding: '12px 32px', 
-                  backgroundColor: '#ea580c', 
-                  color: 'white', 
-                  border: '2px solid #c2410c', // La belle bordure un peu plus foncée
-                  borderRadius: '30px', // Un bel arrondi
-                  cursor: 'pointer', 
-                  fontWeight: 'bold', 
-                  fontSize: '1rem',
-                  boxShadow: '0 4px 6px rgba(234, 88, 12, 0.25)', // Légère ombre pour donner du relief
-                }}
               >
                 + Comparer avec un autre ETF
               </button>
@@ -78,26 +102,45 @@ function EtfSelector() {
           )}
         </div>
 
-        {/* COLONNE DROITE : Apparaît uniquement si l'interrupteur isComparing est sur "true" */}
+        {/* COLONNE DROITE */}
         {isComparing && (
-          <div style={{ flex: 1, minWidth: '300px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: '#ea580c', fontWeight: 'bold' }}>
-              🟠 Actif n°2 (Courbe Orange) :
+          <div className="etf-column">
+            <label className="etf-label label-orange">
+              🟠 Actif n°2 — Courbe orange :
             </label>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <select 
-                style={{ padding: '8px', width: '100%', fontSize: '16px', borderColor: '#ea580c' }}
-                value={etf2Id}
-                onChange={(e) => setEtf2Id(e.target.value)}
-              >
-                <option value="">-- Sélectionner pour comparer --</option>
-                {etfs.map(etf => <option key={etf.id} value={etf.id}>{etf.nom} ({etf.ticker})</option>)}
-              </select>
-              
-              {/* Le bouton en forme de croix pour annuler */}
-              <button 
+
+            <div className="comparison-row">
+              <div className="etf-search-card orange-card">
+                <div className="search-wrapper">
+                  <span className="search-icon">🔎</span>
+
+                  <input
+                    type="text"
+                    className="etf-search-input orange-input"
+                    placeholder="Rechercher un deuxième ETF..."
+                    value={searchEtf2}
+                    onChange={(e) => setSearchEtf2(e.target.value)}
+                  />
+                </div>
+
+                <select
+                  className="etf-select select-orange"
+                  value={etf2Id}
+                  onChange={(e) => setEtf2Id(e.target.value)}
+                >
+                  <option value="">-- Sélectionner pour comparer --</option>
+
+                  {filteredEtfs2.map(etf => (
+                    <option key={etf.id} value={etf.id}>
+                      {etf.nom} ({etf.ticker})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                className="close-compare-button"
                 onClick={annulerComparaison}
-                style={{ padding: '8px 12px', backgroundColor: '#dc2626', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
                 title="Fermer la comparaison"
               >
                 ✖
@@ -105,10 +148,10 @@ function EtfSelector() {
             </div>
 
             {selectedEtf2 && (
-              <div style={{ marginTop: '15px', padding: '15px', borderLeft: '4px solid #ea580c', backgroundColor: '#fff7ed', borderRadius: '4px' }}>
-                <p style={{ margin: '5px 0' }}><strong>Frais :</strong> {(selectedEtf2.ter * 100).toFixed(2)} %</p>
-                <p style={{ margin: '5px 0' }}><strong>PEA :</strong> {selectedEtf2.eligible_pea ? "✅ Oui" : "❌ Non"}</p>
-                <p style={{ margin: '5px 0' }}><strong>Indice :</strong> {selectedEtf2.indice_replique}</p>
+              <div className="etf-info-box info-orange">
+                <p><strong>Frais :</strong> {(selectedEtf2.ter * 100).toFixed(2)} %</p>
+                <p><strong>PEA :</strong> {selectedEtf2.eligible_pea ? "✅ Oui" : "❌ Non"}</p>
+                <p><strong>Indice :</strong> {selectedEtf2.indice_replique}</p>
               </div>
             )}
           </div>
