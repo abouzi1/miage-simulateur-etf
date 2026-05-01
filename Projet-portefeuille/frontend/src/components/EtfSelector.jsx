@@ -27,7 +27,7 @@ function EtfSelector() {
 
   return (
     <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      <h2>Explorateur d'ETF (Module A)</h2>
+      <h2>Explorateur d'ETF</h2>
       
       <div style={{ display: 'flex', gap: '40px', flexWrap: 'wrap', marginBottom: '30px' }}>
         
