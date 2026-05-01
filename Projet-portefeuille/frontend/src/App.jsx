@@ -228,7 +228,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/etf" element={<ExplorateurETF />} />
             <Route path="/simulateur" element={<SimulateurDCA />} />
-            <Route path="/regression" element={<RegressionLineaire />} />
+            <Route path="/regression" element={<RegressionLineraire />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
