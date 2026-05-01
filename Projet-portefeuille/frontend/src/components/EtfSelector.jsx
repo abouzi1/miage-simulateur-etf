@@ -1,70 +1,81 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import EtfChart from './EtfChart'; // <--- 1. L'IMPORTATION EST ICI
+import EtfChart from './EtfChart';
 
 function EtfSelector() {
   const [etfs, setEtfs] = useState([]);
-  const [selectedEtfId, setSelectedEtfId] = useState("");
+  // On crée deux boîtes pour nos deux ETF
+  const [etf1Id, setEtf1Id] = useState("");
+  const [etf2Id, setEtf2Id] = useState("");
 
   useEffect(() => {
     axios.get('http://127.0.0.1:8000/api/etfs')
-      .then(response => {
-        setEtfs(response.data);
-      })
-      .catch(error => {
-        console.error("Erreur de connexion au Backend :", error);
-      });
+      .then(response => setEtfs(response.data))
+      .catch(error => console.error("Erreur Backend :", error));
   }, []);
 
-  const selectedEtf = etfs.find(etf => etf.id.toString() === selectedEtfId);
+  const selectedEtf1 = etfs.find(etf => etf.id.toString() === etf1Id);
+  const selectedEtf2 = etfs.find(etf => etf.id.toString() === etf2Id);
 
   return (
     <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      <h2>Explorateur d'ETF (Module A)</h2>
-      <label htmlFor="etf-select" style={{ marginRight: '10px' }}>
-        Sélectionne un ETF :
-      </label>
+      <h2>Explorateur et Comparateur d'ETF (Module A)</h2>
       
-      <select 
-        id="etf-select" 
-        style={{ padding: '8px', fontSize: '16px' }}
-        value={selectedEtfId}
-        onChange={(e) => setSelectedEtfId(e.target.value)}
-      >
-        <option value="">-- Liste des ETF --</option>
-        {etfs.map(etf => (
-          <option key={etf.id} value={etf.id}>
-            {etf.nom} ({etf.ticker})
-          </option>
-        ))}
-      </select>
+      {/* Conteneur Flexbox pour mettre les deux sélecteurs côte à côte */}
+      <div style={{ display: 'flex', gap: '40px', flexWrap: 'wrap', marginBottom: '30px' }}>
+        
+        {/* COLONNE GAUCHE : ETF 1 (Bleu) */}
+        <div style={{ flex: 1, minWidth: '300px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', color: '#2563eb', fontWeight: 'bold' }}>
+            🔴 Actif n°1 (Courbe Bleue) :
+          </label>
+          <select 
+            style={{ padding: '8px', width: '100%', fontSize: '16px', borderColor: '#2563eb' }}
+            value={etf1Id}
+            onChange={(e) => setEtf1Id(e.target.value)}
+          >
+            <option value="">-- Sélectionner --</option>
+            {etfs.map(etf => <option key={etf.id} value={etf.id}>{etf.nom} ({etf.ticker})</option>)}
+          </select>
 
-      {/* La carte d'identité */}
-      {selectedEtf && (
-        <div style={{ 
-          marginTop: '20px', 
-          padding: '15px', 
-          border: '1px solid #ccc', 
-          borderRadius: '8px', 
-          maxWidth: '400px',
-          backgroundColor: '#f9f9f9'
-        }}>
-          <h3 style={{ marginTop: '0' }}>Détails du produit</h3>
-          <p><strong>Nom :</strong> {selectedEtf.nom}</p>
-          <p><strong>Ticker :</strong> {selectedEtf.ticker}</p>
-          <p><strong>Indice répliqué :</strong> {selectedEtf.indice_replique}</p>
-          <p><strong>Gestionnaire :</strong> {selectedEtf.gestionnaire}</p>
-          <p><strong>Frais de gestion :</strong> {(selectedEtf.ter * 100).toFixed(2)} %</p>
-          <p><strong>Éligible PEA :</strong> {selectedEtf.eligible_pea ? "✅ Oui" : "❌ Non"}</p>
+          {selectedEtf1 && (
+            <div style={{ marginTop: '15px', padding: '15px', borderLeft: '4px solid #2563eb', backgroundColor: '#f0f4ff', borderRadius: '4px' }}>
+              <p style={{ margin: '5px 0' }}><strong>Frais :</strong> {(selectedEtf1.ter * 100).toFixed(2)} %</p>
+              <p style={{ margin: '5px 0' }}><strong>PEA :</strong> {selectedEtf1.eligible_pea ? "✅ Oui" : "❌ Non"}</p>
+              <p style={{ margin: '5px 0' }}><strong>Indice :</strong> {selectedEtf1.indice_replique}</p>
+            </div>
+          )}
         </div>
-      )}
 
-      {/* <--- 2. LE GRAPHIQUE EST PLACÉ ICI, JUSTE AVANT LA FIN DE LA PAGE */}
-      {selectedEtfId && (
-        <EtfChart etfId={selectedEtfId} />
-      )}
+        {/* COLONNE DROITE : ETF 2 (Orange) */}
+        <div style={{ flex: 1, minWidth: '300px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', color: '#ea580c', fontWeight: 'bold' }}>
+            🟠 Actif n°2 (Courbe Orange) :
+          </label>
+          <select 
+            style={{ padding: '8px', width: '100%', fontSize: '16px', borderColor: '#ea580c' }}
+            value={etf2Id}
+            onChange={(e) => setEtf2Id(e.target.value)}
+          >
+            <option value="">-- Sélectionner pour comparer --</option>
+            {etfs.map(etf => <option key={etf.id} value={etf.id}>{etf.nom} ({etf.ticker})</option>)}
+          </select>
 
-    </div> // <--- Voici la toute dernière balise dont je parlais !
+          {selectedEtf2 && (
+            <div style={{ marginTop: '15px', padding: '15px', borderLeft: '4px solid #ea580c', backgroundColor: '#fff7ed', borderRadius: '4px' }}>
+              <p style={{ margin: '5px 0' }}><strong>Frais :</strong> {(selectedEtf2.ter * 100).toFixed(2)} %</p>
+              <p style={{ margin: '5px 0' }}><strong>PEA :</strong> {selectedEtf2.eligible_pea ? "✅ Oui" : "❌ Non"}</p>
+              <p style={{ margin: '5px 0' }}><strong>Indice :</strong> {selectedEtf2.indice_replique}</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Le Graphique : On lui passe maintenant les objets complets pour qu'il connaisse les Tickers */}
+      {(selectedEtf1 || selectedEtf2) && (
+        <EtfChart etf1={selectedEtf1} etf2={selectedEtf2} />
+      )}
+    </div>
   );
 }
 

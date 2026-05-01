@@ -1,56 +1,81 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
-function EtfChart({ etfId }) {
-  // Boîte pour stocker les milliers de prix
+function EtfChart({ etf1, etf2 }) {
   const [data, setData] = useState([]);
-  // Boîte pour savoir si on est en train de charger
   const [loading, setLoading] = useState(false);
 
-  // Ce code s'active à chaque fois que l'etfId change (quand tu cliques dans le menu)
   useEffect(() => {
-    if (!etfId) return;
+    // S'il n'y a aucun ETF sélectionné, on vide le graphique
+    if (!etf1 && !etf2) {
+      setData([]);
+      return;
+    }
 
     setLoading(true);
-    // On appelle ta fameuse route Historique !
-    axios.get(`http://127.0.0.1:8000/api/etfs/${etfId}/historique`)
-      .then(response => {
-        setData(response.data);
+
+    // On prépare les deux appels à l'API. Si un ETF manque, on renvoie une liste vide pour ne rien bloquer.
+    const requete1 = etf1 ? axios.get(`http://127.0.0.1:8000/api/etfs/${etf1.id}/historique`) : Promise.resolve({ data: [] });
+    const requete2 = etf2 ? axios.get(`http://127.0.0.1:8000/api/etfs/${etf2.id}/historique`) : Promise.resolve({ data: [] });
+
+    // On lance les deux requêtes en même temps avec Promise.all
+    Promise.all([requete1, requete2])
+      .then(([reponse1, reponse2]) => {
+        const historique1 = reponse1.data;
+        const historique2 = reponse2.data;
+
+        // FUSION DES DONNÉES : On utilise un dictionnaire pour regrouper les prix par date
+        const donneesFusionnees = {};
+
+        historique1.forEach(item => {
+          donneesFusionnees[item.date] = { date: item.date, [etf1.ticker]: item.prix };
+        });
+
+        historique2.forEach(item => {
+          if (!donneesFusionnees[item.date]) {
+            donneesFusionnees[item.date] = { date: item.date };
+          }
+          donneesFusionnees[item.date][etf2.ticker] = item.prix;
+        });
+
+        // On retransforme le dictionnaire en tableau et on le trie chronologiquement
+        const tableauFinal = Object.values(donneesFusionnees).sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        setData(tableauFinal);
         setLoading(false);
       })
       .catch(error => {
-        console.error("Erreur lors de la récupération de l'historique :", error);
+        console.error("Erreur lors de la fusion de l'historique :", error);
         setLoading(false);
       });
-  }, [etfId]);
+  }, [etf1, etf2]); // On relance ce code dès qu'un des deux ETF change
 
-  if (loading) return <p style={{ marginTop: '20px' }}>⏳ Chargement de l'historique (cela peut prendre quelques secondes)...</p>;
+  if (loading) return <p style={{ marginTop: '20px', textAlign: 'center' }}>⏳ Calcul et fusion des historiques en cours...</p>;
   if (data.length === 0) return null;
 
   return (
-    <div style={{ marginTop: '40px', height: '400px', width: '100%', maxWidth: '800px' }}>
-      <h3>Évolution du prix de clôture</h3>
+    <div style={{ marginTop: '20px', height: '450px', width: '100%', maxWidth: '1000px', margin: '0 auto' }}>
+      <h3 style={{ textAlign: 'center' }}>Comparaison des prix de clôture</h3>
       
-      {/* ResponsiveContainer permet au graphique de s'adapter à la taille de l'écran */}
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-          <XAxis 
-            dataKey="date" 
-            minTickGap={50} // Évite que les dates ne se chevauchent
-            tick={{ fontSize: 12 }}
-          />
-          {/* L'axe Y s'adapte automatiquement au prix le plus bas et le plus haut */}
+          <XAxis dataKey="date" minTickGap={50} tick={{ fontSize: 12 }} />
           <YAxis domain={['auto', 'auto']} tick={{ fontSize: 12 }} />
           <Tooltip />
-          <Line 
-            type="monotone" 
-            dataKey="prix" 
-            stroke="#2563eb" // Une jolie couleur bleue
-            dot={false} // On enlève les points pour que la ligne soit fluide (il y a 3000 points !)
-            strokeWidth={2} 
-          />
+          {/* Legend permet d'afficher le nom de la courbe en bas du graphique */}
+          <Legend verticalAlign="top" height={36} />
+          
+          {/* Si ETF1 existe, on dessine sa ligne bleue. On utilise son Ticker comme clé dynamique */}
+          {etf1 && (
+            <Line type="monotone" dataKey={etf1.ticker} name={etf1.nom} stroke="#2563eb" dot={false} strokeWidth={2} />
+          )}
+          
+          {/* Si ETF2 existe, on dessine sa ligne orange */}
+          {etf2 && (
+            <Line type="monotone" dataKey={etf2.ticker} name={etf2.nom} stroke="#ea580c" dot={false} strokeWidth={2} />
+          )}
         </LineChart>
       </ResponsiveContainer>
     </div>
