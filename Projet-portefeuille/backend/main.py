@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import simulation
 from routers import router_regression # P3 - Module C
+from routers import explorateur_etf
 
 # 1. Création de l'instance FastAPI
 app = FastAPI(
@@ -25,6 +26,7 @@ app.add_middleware(
 # 3. Inclusion des routers
 app.include_router(simulation.router)
 app.include_router(router_regression.router)  # P3 - Module C # P3 - Module C
+app.include_router(explorateur_etf.router)  # Module A - Explorateur ETF
 
 # 4. Route de santé
 @app.get("/", tags=["Health"])
