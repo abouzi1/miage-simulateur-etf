@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, NavLink, Navigate } from "react-router-dom";
 import SimulateurDCA from "./pages/SimulateurDCA";
+import ModuleC from "./pages/ModuleC";
 import "./App.css";
 
 // ============================================================
@@ -136,17 +137,6 @@ function ExplorateurETF() {
   );
 }
 
-function RegressionLineaire() {
-  return (
-    <div className="placeholder-page">
-      <span className="placeholder-icon">📐</span>
-      <h1>Module C — Régression linéaire</h1>
-      <p>Cette page sera développée par mon coéquipier.</p>
-      <p className="placeholder-meta">🚧 En cours de construction</p>
-    </div>
-  );
-}
-
 // ============================================================
 // NAVBAR
 // ============================================================
@@ -228,7 +218,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/etf" element={<ExplorateurETF />} />
             <Route path="/simulateur" element={<SimulateurDCA />} />
-            <Route path="/regression" element={<RegressionLineraire />} />
+            <Route path="/regression" element={<ModuleC/>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

@@ -26,7 +26,10 @@ export async function getSimulation(id) {
 }
 
 export async function getEtfs() {
-  const response = await fetch(`${API_BASE_URL}/etf/`);
-  if (!response.ok) throw new Error("Erreur récupération ETF");
-  return response.json();
+  return [
+    { ticker: "CW8.PA", nom: "Amundi MSCI World", ter: 0.0038 },
+    { ticker: "500.PA", nom: "Amundi S&P 500", ter: 0.0015 },
+    { ticker: "ESE.PA", nom: "iShares MSCI Europe", ter: 0.0012 },
+    { ticker: "OBLI.PA", nom: "Lyxor Obligations Euro", ter: 0.0017 },
+  ];
 }

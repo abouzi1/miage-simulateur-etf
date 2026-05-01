@@ -3,21 +3,48 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from regression import calculer_regression
 import psycopg2
+from pathlib import Path
+from dotenv import load_dotenv
+import os
 
 router = APIRouter(prefix="/regression", tags=["Regression"])
+
+# Charge le .env situé dans le dossier backend/
+BASE_DIR = Path(__file__).resolve().parents[1]
+load_dotenv(BASE_DIR / ".env", encoding="utf-8")
+
+# Configuration encodage PostgreSQL
+os.environ["LC_MESSAGES"] = "C"
+os.environ["LANG"] = "C"
+os.environ["PGCLIENTENCODING"] = "UTF8"
 
 class RegressionRequest(BaseModel):
     ticker: str
     fenetre_annees: int = 10
 
-def get_connexion():
+def get_db_connection():
+    """
+    Connexion PostgreSQL.
+    Utilise DATABASE_URL si disponible, sinon les variables DB_HOST, DB_PORT, etc.
+    """
+    database_url = os.getenv("DATABASE_URL")
+
+    if database_url:
+        return psycopg2.connect(
+            database_url,
+            client_encoding="UTF8",
+        )
+
     return psycopg2.connect(
-        host="localhost",
-        port=5432,
-        database="portefeuille",
-        user="postgres",
-        password="Olympia1912!"
+        host=os.getenv("DB_HOST", "localhost"),
+        port=int(os.getenv("DB_PORT", "5432")),
+        dbname=os.getenv("DB_NAME", "portefeuille"),
+        user=os.getenv("DB_USER", "postgres"),
+        password=os.getenv("DB_PASSWORD"),
+        client_encoding="UTF8",
     )
+
+
 
 @router.post("/")
 def lancer_regression(req: RegressionRequest):
@@ -31,7 +58,7 @@ def lancer_regression(req: RegressionRequest):
         raise HTTPException(status_code=404, detail=f"Aucune donnee trouvee pour {req.ticker}")
 
     # Sauvegarder en BDD
-    conn = get_connexion()
+    conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("""
         INSERT INTO resultat_regression (etf_id, fenetre_annees, r2, pente_jour, p_value)
