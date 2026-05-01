@@ -1,20 +1,41 @@
-from fastapi import FastAPI, HTTPException
+"""
+Point d'entrée principal de l'API FastAPI - Projet DATA M2 MIAGE
+"""
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
-from backend import explorateur_etf
+from routers import simulation
+from routers import router_regression # P3 - Module C
 
-# Charge les variables du fichier .env (notamment DATABASE_URL)
-load_dotenv()
+# 1. Création de l'instance FastAPI
+app = FastAPI(
+    title="Simulateur de Portefeuille Passif",
+    description="API du projet DATA M2 MIAGE - Modules B et C",
+    version="1.0.0",
+)
 
-app = FastAPI(title="API Simulateur ETF")
+# 2. Configuration CORS pour autoriser le frontend React Vite
 
-# Configuration du CORS (autorise le Frontend React à discuter avec ce Backend)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# 3. Inclusion des routers
+app.include_router(simulation.router)
+app.include_router(router_regression.router)  # P3 - Module C # P3 - Module C
 
-app.include(explorateur_etf) 
+# 4. Route de santé
+@app.get("/", tags=["Health"])
+def root():
+    return {
+        "status": "ok",
+        "message": "API Simulateur de Portefeuille - Projet DATA M2 MIAGE",
+        "docs": "/docs",
+    }
+
+
+@app.get("/health", tags=["Health"])
+def health():
+    return {"status": "healthy"}
