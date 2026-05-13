@@ -3,11 +3,14 @@ import axios from 'axios';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 function EtfChart({ etf1, etf2 }) {
+  // 1. Le nouveau state pour gérer l'échelle temporelle choisie (par défaut: "10A")
+  const [echelle, setEchelle] = useState("10A");
+  
+  // States existants
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // S'il n'y a aucun ETF sélectionné, on vide le graphique
     if (!etf1 && !etf2) {
       setData([]);
       return;
@@ -15,17 +18,14 @@ function EtfChart({ etf1, etf2 }) {
 
     setLoading(true);
 
-    // On prépare les deux appels à l'API. Si un ETF manque, on renvoie une liste vide pour ne rien bloquer.
     const requete1 = etf1 ? axios.get(`http://127.0.0.1:8000/etfs/${etf1.id}/historique`) : Promise.resolve({ data: [] });
     const requete2 = etf2 ? axios.get(`http://127.0.0.1:8000/etfs/${etf2.id}/historique`) : Promise.resolve({ data: [] });
 
-    // On lance les deux requêtes en même temps avec Promise.all
     Promise.all([requete1, requete2])
       .then(([reponse1, reponse2]) => {
         const historique1 = reponse1.data;
         const historique2 = reponse2.data;
 
-        // FUSION DES DONNÉES : On utilise un dictionnaire pour regrouper les prix par date
         const donneesFusionnees = {};
 
         historique1.forEach(item => {
@@ -39,7 +39,6 @@ function EtfChart({ etf1, etf2 }) {
           donneesFusionnees[item.date][etf2.ticker] = item.prix;
         });
 
-        // On retransforme le dictionnaire en tableau et on le trie chronologiquement
         const tableauFinal = Object.values(donneesFusionnees).sort((a, b) => new Date(a.date) - new Date(b.date));
         
         setData(tableauFinal);
@@ -51,22 +50,109 @@ function EtfChart({ etf1, etf2 }) {
       });
   }, [etf1, etf2]);
 
+  // 2. La fonction qui filtre les données brutes selon le bouton cliqué
+  const filtrerHistorique = (donnees, echelleChoisie) => {
+    if (!donnees || donnees.length === 0) return [];
+
+    const dateLaPlusRecente = new Date(donnees[donnees.length - 1].date);
+    let dateLimite = new Date(dateLaPlusRecente);
+
+    if (echelleChoisie === "1A") {
+      dateLimite.setFullYear(dateLaPlusRecente.getFullYear() - 1);
+    } else if (echelleChoisie === "3A") {
+      dateLimite.setFullYear(dateLaPlusRecente.getFullYear() - 3);
+    } else {
+      return donnees; // Pour 10 ans ou plus, on renvoie tout
+    }
+
+    return donnees.filter(point => new Date(point.date) >= dateLimite);
+  };
+
   if (loading) return <p style={{ marginTop: '20px', textAlign: 'center' }}>⏳ Calcul et fusion des historiques en cours...</p>;
   if (data.length === 0) return null;
 
+  // 3. On applique le filtre juste avant le rendu (comme ça, on ne refait pas de requête réseau quand on change l'échelle !)
+  const donneesFiltrees = filtrerHistorique(data, echelle);
+
+  // Styles en ligne pour les boutons (tu pourras les déplacer dans EtfSelector.css plus tard si tu veux)
+  const boutonStyle = {
+    padding: '8px 16px',
+    margin: '0 5px',
+    border: '1px solid #cbd5e1',
+    borderRadius: '4px',
+    backgroundColor: '#fff',
+    cursor: 'pointer',
+    color: '#334155',
+    fontWeight: 'bold',
+    transition: 'all 0.2s'
+  };
+
+  const boutonActifStyle = {
+    ...boutonStyle,
+    backgroundColor: '#2563eb',
+    color: '#fff',
+    borderColor: '#2563eb'
+  };
+
   return (
-    <div className="carte-commune" style={{ height: '450px', width: '100%', maxWidth: '1000px', margin: '20px auto' }}>
-      <h3 style={{ textAlign: 'center', marginBottom: '20px' }}>Comparaison des prix de clôture</h3>
+    // On ajoute position: 'relative' au conteneur principal pour pouvoir placer notre icône
+    <div className="carte-commune" style={{ position: 'relative', height: '550px', width: '100%', maxWidth: '1000px', margin: '20px auto', display: 'flex', flexDirection: 'column' }}>
+      <h3 style={{ textAlign: 'center', marginBottom: '15px' }}>Comparaison des prix de clôture</h3>
       
+      {/* 4. Les boutons de sélection d'échelle */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+        <button 
+          style={echelle === "1A" ? boutonActifStyle : boutonStyle} 
+          onClick={() => setEchelle("1A")}
+        >
+          1 An
+        </button>
+        <button 
+          style={echelle === "3A" ? boutonActifStyle : boutonStyle} 
+          onClick={() => setEchelle("3A")}
+        >
+          3 Ans
+        </button>
+        <button 
+          style={echelle === "10A" ? boutonActifStyle : boutonStyle} 
+          onClick={() => setEchelle("10A")}
+        >
+          10 Ans
+        </button>
+      </div>
+
+      {/* NOUVEAU : L'icône des flèches orthogonales en haut à droite */}
+      <div style={{ 
+        position: 'absolute', 
+        top: '20px', 
+        right: '25px', 
+        display: 'flex', 
+        alignItems: 'flex-end', 
+        color: '#94a3b8', 
+        fontSize: '12px',
+        fontWeight: 'bold'
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '2px' }}>
+          <span>Prix</span>
+          {/* Dessin SVG personnalisé des deux flèches */}
+          <svg width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none" style={{ marginTop: '2px' }}>
+             {/* Axe Y (vertical) avec sa flèche */}
+             <path d="M4 20V4l-3 3m3-3l3 3" />
+             {/* Axe X (horizontal) avec sa flèche */}
+             <path d="M4 20h16l-3-3m3 3l-3 3" />
+          </svg>
+        </div>
+        <span style={{ marginBottom: '2px' }}>Temps</span>
+      </div>
+      
+      {/* 5. Le graphique Recharts */}
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data}>
+        <LineChart data={donneesFiltrees}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
           <XAxis dataKey="date" minTickGap={50} tick={{ fontSize: 12 }} />
           
-          {/* 1. L'axe de GAUCHE (Bleu) pour l'ETF 1 */}
           <YAxis yAxisId="left" domain={['auto', 'auto']} tick={{ fontSize: 12, fill: '#2563eb' }} />
           
-          {/* 2. L'axe de DROITE (Orange) pour l'ETF 2 (s'il existe) */}
           {etf2 && (
             <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} tick={{ fontSize: 12, fill: '#ea580c' }} />
           )}
@@ -74,10 +160,9 @@ function EtfChart({ etf1, etf2 }) {
           <Tooltip />
           <Legend verticalAlign="top" height={36} />
           
-          {/* Ligne ETF 1 */}
           {etf1 && (
             <Line 
-              yAxisId="left" /* <--- On rattache cette ligne à l'axe de gauche */
+              yAxisId="left"
               type="monotone" 
               dataKey={etf1.ticker} 
               name={etf1.nom} 
@@ -88,10 +173,9 @@ function EtfChart({ etf1, etf2 }) {
             />
           )}
           
-          {/* Ligne ETF 2 */}
           {etf2 && (
             <Line 
-              yAxisId="right" /* <--- On rattache cette ligne à l'axe de droite */
+              yAxisId="right"
               type="monotone" 
               dataKey={etf2.ticker} 
               name={etf2.nom} 
