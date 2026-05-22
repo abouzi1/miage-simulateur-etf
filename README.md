@@ -1,6 +1,6 @@
 # Simulateur de portefeuille passif ETF
 
-Projet DATA - M2 MIAGE Apprentissage
+Projet  DATA - M2 MIAGE Apprentissage
 
 Application web pédagogique permettant d’explorer des ETF, de simuler une stratégie d’investissement programmé DCA et d’analyser une tendance historique à l’aide d’une régression linéaire.
 
