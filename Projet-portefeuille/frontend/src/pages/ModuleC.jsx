@@ -4,7 +4,7 @@ import RegressionResults from "../components/RegressionResults";
 import RegressionTrendChart from "../components/RegressionTrendChart";
 import ResidualsChart from "../components/ResidualsChart";
 import RegressionAnalysis from "../components/RegressionAnalysis";
-import { getEtfs, lancerRegression } from "../services/regressionApi";
+import { getEtfs, lancerRegression } from "../services/regressionAPI";
 import "./ModuleC.css";
 
 export default function ModuleC() {
