@@ -18,8 +18,9 @@ function EtfChart({ etf1, etf2 }) {
 
     setLoading(true);
 
-    const requete1 = etf1 ? axios.get(`http://127.0.0.1:8000/etfs/${etf1.id}/historique`) : Promise.resolve({ data: [] });
-    const requete2 = etf2 ? axios.get(`http://127.0.0.1:8000/etfs/${etf2.id}/historique`) : Promise.resolve({ data: [] });
+    // MODIFICATION ICI : Remplacement de l'adresse locale par l'URL de production Railway
+    const requete1 = etf1 ? axios.get(`https://miage-simulateur-etf-production.up.railway.app/etfs/${etf1.id}/historique`) : Promise.resolve({ data: [] });
+    const requete2 = etf2 ? axios.get(`https://miage-simulateur-etf-production.up.railway.app/etfs/${etf2.id}/historique`) : Promise.resolve({ data: [] });
 
     Promise.all([requete1, requete2])
       .then(([reponse1, reponse2]) => {
@@ -74,7 +75,7 @@ function EtfChart({ etf1, etf2 }) {
   // 3. On applique le filtre juste avant le rendu (comme ça, on ne refait pas de requête réseau quand on change l'échelle !)
   const donneesFiltrees = filtrerHistorique(data, echelle);
 
-  // Styles en ligne pour les boutons (tu pourras les déplacer dans EtfSelector.css plus tard si tu veux)
+  // Styles en ligne pour les boutons
   const boutonStyle = {
     padding: '8px 16px',
     margin: '0 5px',
@@ -121,7 +122,7 @@ function EtfChart({ etf1, etf2 }) {
         </button>
       </div>
 
-      {/* NOUVEAU : L'icône des flèches orthogonales en haut à droite */}
+      {/* L'icône des flèches orthogonales en haut à droite */}
       <div style={{ 
         position: 'absolute', 
         top: '20px', 

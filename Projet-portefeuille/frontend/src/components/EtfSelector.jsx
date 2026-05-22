@@ -14,7 +14,8 @@ function EtfSelector() {
   const [searchEtf2, setSearchEtf2] = useState("");
 
   useEffect(() => {
-    axios.get('http://127.0.0.1:8000/etfs')
+    // MODIFICATION ICI : Remplacement de l'adresse locale par l'URL de production Railway
+    axios.get('https://miage-simulateur-etf-production.up.railway.app/etfs')
       .then(response => setEtfs(response.data))
       .catch(error => console.error("Erreur Backend :", error));
   }, []);
