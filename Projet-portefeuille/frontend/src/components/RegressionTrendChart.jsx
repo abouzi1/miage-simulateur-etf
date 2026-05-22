@@ -55,7 +55,7 @@ export default function RegressionTrendChart({ data }) {
               connectNulls
             />
 
-            <Line
+           <Line
               type="monotone"
               dataKey="prix_reel"
               name="Cours réel"
@@ -65,15 +65,16 @@ export default function RegressionTrendChart({ data }) {
               connectNulls
             />
 
-            <Line
-              type="monotone"
+          <Line
+              type="linear"                    // ← ICI
               dataKey="prix_predit"
               name="Droite de régression"
               stroke="#f59e0b"
-              strokeWidth={2}
+              strokeWidth={2.5}               // ← Optionnel : rend la droite plus visible
               dot={false}
               connectNulls
-            />
+              isAnimationActive={false}        // ← Optionnel : désactive l'animation
+          />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
