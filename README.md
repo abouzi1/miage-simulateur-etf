@@ -4,7 +4,7 @@ Projet  DATA - M2 MIAGE Apprentissage
 
 Application web pédagogique permettant d’explorer des ETF, de simuler une stratégie d’investissement programmé DCA et d’analyser une tendance historique à l’aide d’une régression linéaire.
 
-> Ce projet ne constitue pas un conseil financier. Il s’agit d’un outil pédagogique de backtesting basé sur des données historiques. Les performances passées ne garantissent pas les performances futures.
+>  Ce projet ne constitue pas un conseil financier. Il s’agit d’un outil pédagogique de backtesting basé sur des données historiques. Les performances passées ne garantissent pas les performances futures.
 
 ---
 
