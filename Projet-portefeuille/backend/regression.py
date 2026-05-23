@@ -68,12 +68,15 @@ def calculer_regression(ticker: str, fenetre_annees: int):
     cur.close()
     conn.close()
 
+    # 🎯 CORRECTION DÉFINITIVE : On filtre les jours sans prix (None)
+    lignes_valides = [r for r in rows if r[1] is not None]
+
     # 🎯 SECURITÉ : Il faut au moins 2 points pour tracer une droite
-    if not rows or len(rows) < 2:
+    if not lignes_valides or len(lignes_valides) < 2:
         return None
 
-    dates = [r[0] for r in rows]
-    prix = [r[1] for r in rows]
+    dates = [r[0] for r in lignes_valides]
+    prix = [r[1] for r in lignes_valides]
 
     # Variables de régression
     X = np.arange(len(prix))  # Jour de trading (0, 1, 2, ...)
