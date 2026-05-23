@@ -2,7 +2,7 @@
  * Client API pour le Module B - Simulateur DCA
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://miage-simulateur-etf-production.up.railway.app";
 
 export async function lancerSimulation(parametres) {
   const response = await fetch(`${API_BASE_URL}/simulation/`, {
