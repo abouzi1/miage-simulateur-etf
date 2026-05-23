@@ -5,6 +5,7 @@ from psycopg2.extras import RealDictCursor
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import math
 
 # Charge le .env situé dans le dossier backend/
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -87,11 +88,17 @@ def get_etf_historique(etf_id: int):
         for row in rows:
             # 🎯 SÉCURISATION 1 : Traitement de la date
             date_brute = row[0]
-            # Si c'est déjà une chaîne de caractères, on la garde, sinon on applique le formatage ISO
             date_propre = date_brute if isinstance(date_brute, str) else date_brute.strftime("%Y-%m-%d")
             
-            # 🎯 SÉCURISATION 2 : Conversion explicite en float (neutralise les crashs de sérialisation des types Decimal)
-            prix_propre = float(row[1]) if row[1] is not None else 0.0
+            # 🎯 SÉCURISATION 2 : Chasse aux NaN et Infinity
+            prix_brut = row[1]
+            if prix_brut is None:
+                prix_propre = None
+            else:
+                prix_propre = float(prix_brut)
+                # Si c'est un "Not a Number" ou un Infini, on le neutralise
+                if math.isnan(prix_propre) or math.isinf(prix_propre):
+                    prix_propre = None
             
             historique.append({
                 "date": date_propre,
