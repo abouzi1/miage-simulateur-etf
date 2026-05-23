@@ -5,6 +5,7 @@ import psycopg2
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from datetime import timedelta  # Ajout de l'import pour les dates de projection
 
 # Charge le .env situé dans le dossier backend/
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -67,7 +68,8 @@ def calculer_regression(ticker: str, fenetre_annees: int):
     cur.close()
     conn.close()
 
-    if not rows:
+    # 🎯 SECURITÉ : Il faut au moins 2 points pour tracer une droite
+    if not rows or len(rows) < 2:
         return None
 
     dates = [r[0] for r in rows]
@@ -75,7 +77,9 @@ def calculer_regression(ticker: str, fenetre_annees: int):
 
     # Variables de régression
     X = np.arange(len(prix))  # Jour de trading (0, 1, 2, ...)
-    Y = np.array(prix)         # Prix de clôture
+    
+    # 🎯 CORRECTION DÉFINITIVE : On force le type 'float' pour éviter le crash de SciPy
+    Y = np.array(prix, dtype=float)  
 
     # Calcul OLS (Ordinary Least Squares)
     slope, intercept, r_value, p_value, std_err = stats.linregress(X, Y)
@@ -119,7 +123,7 @@ def calculer_regression(ticker: str, fenetre_annees: int):
         "intercept": round(float(intercept), 4),
         "nb_points": len(X),
         
-        # ⭐ HISTORIQUE : TOUS LES POINTS (CHANGEMENT CLÉS)
+        # ⭐ HISTORIQUE : TOUS LES POINTS
         "historique": [
             {
                 "date": str(dates[i]),
@@ -129,13 +133,14 @@ def calculer_regression(ticker: str, fenetre_annees: int):
                 "ic_inf": round(float(ic_inf[i]), 2),
                 "residu": round(float(residus[i]), 2),
             }
-            for i in range(len(X))  # ✅ TOUS les points (était: range(0, len(X), 5))
+            for i in range(len(X))
         ],
         
         # Projection future : ~252 points pour 12 mois
         "projection": [
             {
-                "date": str(dates[-1]),
+                # 🎯 CORRECTION DATES : On ajoute 'i' jours à la dernière date
+                "date": str(dates[-1] + timedelta(days=i)),
                 "tendance": round(float(Y_futur[i]), 2),
                 "ic_sup": round(float(ic_sup_fut[i]), 2),
                 "ic_inf": round(float(ic_inf_fut[i]), 2),
