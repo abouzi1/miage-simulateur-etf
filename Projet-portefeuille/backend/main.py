@@ -17,8 +17,8 @@ app = FastAPI(
 # 2. Configuration CORS pour autoriser le frontend React Vite (Vercel inclus)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=["https://miage-simulateur-etf.vercel.app"], # Mets l'URL exacte de ton site Vercel
+    allow_credentials=True, # À True pour éviter les conflits
     allow_methods=["*"],
     allow_headers=["*"],
 )
