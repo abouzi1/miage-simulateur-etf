@@ -3,9 +3,10 @@ import numpy as np
 from scipy import stats
 import psycopg2
 import os
+import math
 from pathlib import Path
 from dotenv import load_dotenv
-from datetime import timedelta  # Ajout de l'import pour les dates de projection
+from datetime import timedelta
 
 # Charge le .env situé dans le dossier backend/
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -19,18 +20,9 @@ os.environ["PGCLIENTENCODING"] = "UTF8"
 
 
 def get_db_connection():
-    """
-    Connexion PostgreSQL.
-    Utilise DATABASE_URL si disponible, sinon les variables DB_HOST, DB_PORT, etc.
-    """
     database_url = os.getenv("DATABASE_URL")
-
     if database_url:
-        return psycopg2.connect(
-            database_url,
-            client_encoding="UTF8",
-        )
-
+        return psycopg2.connect(database_url, client_encoding="UTF8")
     return psycopg2.connect(
         host=os.getenv("DB_HOST", "localhost"),
         port=int(os.getenv("DB_PORT", "5432")),
@@ -40,18 +32,19 @@ def get_db_connection():
         client_encoding="UTF8",
     )
 
+# 🛡️ LE BOUCLIER ANTI-CRASH JSON
+def safe_round(val, decimals=2):
+    """Convertit en float, arrondit, et transforme les NaN/Inf en None (null en JSON)."""
+    try:
+        f = float(val)
+        if math.isnan(f) or math.isinf(f):
+            return None
+        return round(f, decimals)
+    except (ValueError, TypeError):
+        return None
+
 
 def calculer_regression(ticker: str, fenetre_annees: int):
-    """
-    Calcule la régression linéaire pour un ETF.
-    
-    Args:
-        ticker: Code de l'ETF (ex: "CW8.PA")
-        fenetre_annees: Nombre d'années d'historique à analyser
-        
-    Returns:
-        Dict avec tous les résultats de régression
-    """
     conn = get_db_connection()
     cur = conn.cursor()
 
@@ -68,85 +61,90 @@ def calculer_regression(ticker: str, fenetre_annees: int):
     cur.close()
     conn.close()
 
-    # 🎯 CORRECTION DÉFINITIVE : On filtre les jours sans prix (None)
-    lignes_valides = [r for r in rows if r[1] is not None]
+    # 🎯 SECURITÉ 1 : Filtrage drastique des données entrantes
+    lignes_valides = []
+    for r in rows:
+        prix_brut = r[1]
+        if prix_brut is not None:
+            try:
+                p = float(prix_brut)
+                if not (math.isnan(p) or math.isinf(p)):
+                    lignes_valides.append((r[0], p))
+            except (ValueError, TypeError):
+                pass
 
-    # 🎯 SECURITÉ : Il faut au moins 2 points pour tracer une droite
-    if not lignes_valides or len(lignes_valides) < 2:
+    if len(lignes_valides) < 2:
         return None
 
     dates = [r[0] for r in lignes_valides]
     prix = [r[1] for r in lignes_valides]
 
     # Variables de régression
-    X = np.arange(len(prix))  # Jour de trading (0, 1, 2, ...)
-    
-    # 🎯 CORRECTION DÉFINITIVE : On force le type 'float' pour éviter le crash de SciPy
-    Y = np.array(prix, dtype=float)  
+    X = np.arange(len(prix))
+    Y = np.array(prix, dtype=float)
 
     # Calcul OLS (Ordinary Least Squares)
     slope, intercept, r_value, p_value, std_err = stats.linregress(X, Y)
 
-    # Valeurs prédites par la droite (PARFAITEMENT AFFINE)
+    # Valeurs prédites par la droite
     Y_pred = intercept + slope * X
-    
-    # Résidus
     residus = Y - Y_pred
-    
-    # R² (coefficient de détermination)
     r2 = r_value ** 2
 
     # Pente annualisée en %/an
     prix_debut = Y_pred[0]
     prix_fin = Y_pred[-1]
-    nb_annees = len(X) / 252  # 252 = jours de trading par an
-    pente_annuelle = ((prix_fin / prix_debut) ** (1 / nb_annees) - 1) * 100
+    nb_annees = len(X) / 252
+    
+    # Sécurité sur la division par zéro pour la pente annuelle
+    if prix_debut > 0 and nb_annees > 0:
+        pente_annuelle = ((prix_fin / prix_debut) ** (1 / nb_annees) - 1) * 100
+    else:
+        pente_annuelle = 0.0
 
     # Intervalle de confiance 95%
     n = len(X)
-    t_crit = stats.t.ppf(0.975, df=n - 2)  # Valeur critique de Student
-    se_line = std_err * np.sqrt(1/n + (X - X.mean())**2 / np.sum((X - X.mean())**2))
+    t_crit = stats.t.ppf(0.975, df=n - 2) if n > 2 else 0
+    se_line = std_err * np.sqrt(1/n + (X - X.mean())**2 / np.sum((X - X.mean())**2)) if n > 2 else np.zeros(n)
     ic_sup = Y_pred + t_crit * se_line
     ic_inf = Y_pred - t_crit * se_line
 
     # Projection 12 mois futurs (252 jours de trading)
     X_futur = np.arange(len(X), len(X) + 252)
     Y_futur = intercept + slope * X_futur
-    se_futur = std_err * np.sqrt(1/n + (X_futur - X.mean())**2 / np.sum((X - X.mean())**2))
+    se_futur = std_err * np.sqrt(1/n + (X_futur - X.mean())**2 / np.sum((X - X.mean())**2)) if n > 2 else np.zeros(len(X_futur))
     ic_sup_fut = Y_futur + t_crit * se_futur
     ic_inf_fut = Y_futur - t_crit * se_futur
 
+    # 🎯 SECURITÉ 2 : On emballe TOUT avec le bouclier `safe_round` avant envoi
     return {
         "ticker": ticker,
         "fenetre_annees": fenetre_annees,
-        "r2": round(r2, 4),
-        "pente_jour": round(float(slope), 4),
-        "pente_annuelle_pct": round(pente_annuelle, 2),
-        "p_value": round(float(p_value), 6),
-        "intercept": round(float(intercept), 4),
+        "r2": safe_round(r2, 4),
+        "pente_jour": safe_round(slope, 4),
+        "pente_annuelle_pct": safe_round(pente_annuelle, 2),
+        "p_value": safe_round(p_value, 6),
+        "intercept": safe_round(intercept, 4),
         "nb_points": len(X),
         
-        # ⭐ HISTORIQUE : TOUS LES POINTS
         "historique": [
             {
                 "date": str(dates[i]),
-                "prix": round(float(Y[i]), 2),
-                "tendance": round(float(Y_pred[i]), 2),
-                "ic_sup": round(float(ic_sup[i]), 2),
-                "ic_inf": round(float(ic_inf[i]), 2),
-                "residu": round(float(residus[i]), 2),
+                "prix": safe_round(Y[i], 2),
+                "tendance": safe_round(Y_pred[i], 2),
+                "ic_sup": safe_round(ic_sup[i], 2),
+                "ic_inf": safe_round(ic_inf[i], 2),
+                "residu": safe_round(residus[i], 2),
             }
             for i in range(len(X))
         ],
         
-        # Projection future : ~252 points pour 12 mois
         "projection": [
             {
-                # 🎯 CORRECTION DATES : On ajoute 'i' jours à la dernière date
                 "date": str(dates[-1] + timedelta(days=i)),
-                "tendance": round(float(Y_futur[i]), 2),
-                "ic_sup": round(float(ic_sup_fut[i]), 2),
-                "ic_inf": round(float(ic_inf_fut[i]), 2),
+                "tendance": safe_round(Y_futur[i], 2),
+                "ic_sup": safe_round(ic_sup_fut[i], 2),
+                "ic_inf": safe_round(ic_inf_fut[i], 2),
             }
             for i in range(len(X_futur))
         ]
