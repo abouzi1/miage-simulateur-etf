@@ -345,16 +345,8 @@ http://127.0.0.1:8000/redoc
 Lien vers l’application déployée :
 
 ```text
-À compléter : https://...
+https://miage-simulateur-etf.vercel.app/
 ```
-
-Lien vers l’API déployée, si séparée du frontend :
-
-```text
-À compléter : https://.../docs
-```
-
----
 
 ## Structure du projet
 
