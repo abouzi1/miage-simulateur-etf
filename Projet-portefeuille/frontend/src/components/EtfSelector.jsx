@@ -15,7 +15,7 @@ function EtfSelector() {
 
   useEffect(() => {
     // MODIFICATION ICI : Remplacement de l'adresse locale par l'URL de production Railway
-    axios.get('https://miage-simulateur-etf-production.up.railway.app/etfs')
+    axios.get('https://miage-simulateur-etf-production.up.railway.app/etfs/')
       .then(response => setEtfs(response.data))
       .catch(error => console.error("Erreur Backend :", error));
   }, []);
